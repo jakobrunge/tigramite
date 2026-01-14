@@ -55,8 +55,8 @@ class Graphs():
                             'stationary_dag',
                             'stationary_admg',
 
-                            # 'mag',
-                            # 'tsg_mag',
+                            'mag',
+                            'tsg_mag',
                             # 'stationary_mag',
                             # 'pag',
                             # 'tsg_pag',
@@ -94,7 +94,6 @@ class Graphs():
            Uses the latent projection operation.
         """
 
-
         if graph_type in ['dag', 'admg']: 
             if graph.ndim != 2:
                 raise ValueError("graph_type in ['dag', 'admg'] assumes graph.shape=(N, N).")
@@ -117,6 +116,30 @@ class Graphs():
             else:
                 # graph = self.graph
                 self.graph_type = 'tsg_' + graph_type
+
+
+        elif graph_type in ['tsg_mag', 'mag']:
+            allowed_edges = ["-->", "<--", "<->", ""]
+            if np.any(np.isin(graph, allowed_edges) == False):
+                raise ValueError("Graph contains invalid graph edge. " +
+                                 "For graph_type = %s only %s are allowed." % (graph_type, str(allowed_edges)))
+            
+            if len(hidden_variables) > 0:
+                raise ValueError(f"Hidden variables can not be combined with {graph_type}.")
+
+            if graph_type == 'mag':
+                if graph.ndim != 2:
+                    raise ValueError("graph_type 'mag' assumes graph.shape=(N, N).")
+                self.graph = np.expand_dims(graph, axis=(2, 3))
+                self.graph_type = 'tsg_' + graph_type
+            else:
+                if graph.ndim != 4:
+                    raise ValueError("tsg-graph_type assumes graph.shape=(N, N, tau_max+1, tau_max+1).")
+                # Then tau_max is implicitely derived from
+                # the dimensions
+                self.graph = graph
+                # self.tau_max = graph.shape[2] - 1
+                self.graph_type = graph_type
 
         elif graph_type in ['tsg_dag', 'tsg_admg']:
             if graph.ndim != 4:
@@ -297,14 +320,15 @@ class Graphs():
                 # Map to (i,-taui, j, tauj) graph
                 indexi = i * (self.tau_max + 1) + taui
                 indexj = j * (self.tau_max + 1) + tauj
-
+                #dictionary containing all links
                 graph_dict[indexj].append(indexi)
 
         # Check for cycles
         if self._check_cyclic(graph_dict):
             raise ValueError("graph is cyclic.")
 
-        # if MAG: check for almost cycles
+        if 'mag' in self.graph_type:
+            self._check_almost_cyclic(graph_dict)
         # if PAG???
 
     def _check_cyclic(self, graph_dict):
@@ -313,9 +337,9 @@ class Graphs():
         graph_dict must be represented as a dictionary mapping vertices to
         iterables of neighbouring vertices. For example:
 
-        >>> cyclic({1: (2,), 2: (3,), 3: (1,)})
+        >> cyclic({1: (2,), 2: (3,), 3: (1,)})
         True
-        >>> cyclic({1: (2,), 2: (3,), 3: (4,)})
+        >> cyclic({1: (2,), 2: (3,), 3: (4,)})
         False
         """
 
@@ -334,6 +358,57 @@ class Graphs():
             return False
 
         return any(visit(v) for v in graph_dict)
+
+    def _check_almost_cyclic(self, parents_dict):
+        """Check for almost-cycles in MAG.
+
+        An almost-cycle is a directed cycle with one edge replaced by a bidirected edge. To check
+        that no almost-cycles are present in the MAG, we can check for each bidirected edge that
+        no endpoint is an ancestor of the other endpoint.
+        Since there are no cycles in the graph containing only the directed edges, we first calculate
+        a (reversed) topological ordering of the nodes considering only the directed edges, and then it is sufficient
+        to check for each bidirected edge that the endpoint with the lower order is not an ancestor
+        of the other endpoint using DFS on the nodes inbetween in the topological ordering.
+        """
+        # Count incoming edges
+        child_count = { i: 0 for i in range(self.N * (self.tau_max + 1))}
+        for indexi, parents in parents_dict.items():
+            for par in parents:
+                child_count[par] +=1
+        # Get topological ordering of nodes considering only directed edges
+        ordering = []
+        while child_count:
+            for index, count in child_count.items():
+                if count == 0:
+                    for par in parents_dict[index]:
+                        child_count[par] -= 1
+                    del child_count[index]
+                    ordering.append(index)
+                    break
+        order_index = {node: index for index, node in enumerate(ordering)}
+        # Check for almost-cycles
+        for i, j, taui, tauj in zip(*np.where(self.graph)):
+            edge = self.graph[i, j, taui, tauj]
+            if edge == "<->" and (i * (self.tau_max + 1) + taui < j * (self.tau_max + 1) + tauj):
+                indexi = i * (self.tau_max + 1) + taui
+                indexj = j * (self.tau_max + 1) + tauj
+
+                if order_index[indexi] < order_index[indexj]:
+                    higher = indexj
+                    lower = indexi
+                else:
+                    higher = indexi
+                    lower = indexj
+                # DFS from higher to check if lower is reachable
+                stack = [lower]
+                visited_dfs = set()
+                while stack:
+                    current = stack.pop()
+                    for par in parents_dict[current]:
+                        if par == higher:
+                            raise ValueError("Graph contains an almost-cycle.")
+                        elif par not in visited_dfs and order_index[lower] < order_index[par] < order_index[higher]:
+                            stack.append(par)
 
     def get_mediators(self, start, end):
         """Returns mediator variables on proper causal paths.
@@ -658,16 +733,26 @@ class Graphs():
 
         return descendants
 
-    def _get_collider_path_nodes(self, W, descendants):
-        """Get non-descendant collider path nodes and their parents of nodes in W up to time t.
-        
+    def _get_collider_path_nodes(self, start_nodes, mediators, with_parents = True):
+        """Returns the set of all nodes from collider path i.e. paths consisting of bidirected edges only
+        a node in start_nodes that only contains nodes in mediators and their parents up to maximum time lag.
+
+        The function recognizes only collider paths of at least length 1.
+
+        Parameters
+        ----------
+        start_nodes : set or list of nodes
+            The set of nodes that a collider path may start in.
+        mediators : set or list of nodes
+            All nodes on the Path that are not start_nodes have to be contained in this set.
+        with_parents : bool
+            If set to false it will only return the collider path nodes, without its parents.
         """
 
         collider_path_nodes = set([])
-        # print("descendants ", descendants)
-        for w in W:
+        # print("mediators ", mediators)
+        for w in start_nodes:
             # print(w)
-            j, tau = w 
             this_level = [w]
             while len(this_level) > 0:
                 next_level = []
@@ -675,20 +760,21 @@ class Graphs():
                     # print("\t", varlag, self._get_spouses(varlag))
                     for spouse in self._get_spouses(varlag):
                         # print("\t\t", spouse)
-                        i, tau = spouse
+                        _, tau = spouse
                         if (spouse not in collider_path_nodes
-                            and spouse not in descendants 
+                            and spouse in mediators
                             and (-self.tau_max <= tau <= 0)): # or self.ignore_time_bounds)):
-                            collider_path_nodes = collider_path_nodes.union(set([spouse]))
+                            collider_path_nodes.add(spouse)
                             next_level.append(spouse)
 
                 this_level = next_level       
 
         # Add parents
-        for w in collider_path_nodes:
-            for par in self._get_parents(w):
+        if with_parents:
+            for par in self._get_all_parents(collider_path_nodes):
+                _, tau = par
                 if (par not in collider_path_nodes
-                    and par not in descendants
+                    and par in mediators
                     and (-self.tau_max <= tau <= 0)): # or self.ignore_time_bounds)):
                     collider_path_nodes = collider_path_nodes.union(set([par]))
 
@@ -1233,6 +1319,77 @@ class Graphs():
 
         return all_causal_paths
 
+
+    def _get_adjacency(self, varleg):
+        """
+        Get all the nodes that are connect to varleg by any sort of edge. No pattern matching needed.
+        """
+        var, leg = varleg
+        adjacency_matrix = self.graph[var][:, abs(leg)]
+        adjacency = [(i, -j) for i, j in zip(*np.where(adjacency_matrix != ''))]
+        return adjacency
+
+
+    def _edge_is_visible(self, edge):
+        """
+        This function returns true if the edge is visible. In a DAG or CPDAG all directed edges are visible. In a MAG
+        PAG an edge X-->Y is visible if there exists a node V not adjacent to Y such that there is a collider path from
+        V into X where all (possibly zero) mediators are parents of Y.
+
+        Parameters
+        ----------
+        edge : an ordered pair of nodes X and Y, each consisting of their variable index and time lag
+        """
+        (x, xlag), (y, ylag) = edge
+        # print(x, xlag, y, ylag)
+        # only directed edges can be visible
+        if self.graph[x][y][abs(xlag)][abs(ylag)] != '-->':
+            return False
+        # currently not used condition for cpdags
+        if 'dag' in self.graph_type:
+            return True
+        # get all nodes on collider paths in the parents of Y and going into X
+        y_parents = set(self._get_parents(edge[1]))
+        collider_path_nodes = self._get_collider_path_nodes([edge[0]], y_parents, with_parents=False)
+        if collider_path_nodes == set():
+            #make sure that the lag of y is given as a negative number
+            collider_path_nodes.add((x,- abs(xlag)))
+        # chack if non-adjacent exists with edge into X or the collider path
+        for node in collider_path_nodes:
+            if not (set(self._get_spouses(node)).union(set(self._get_parents(node))) - set(self._get_adjacency(edge[1]))
+                    == set()):
+                return True
+        #chack if such a node is not a parent of Y
+        return False
+
+
+    def is_amenable(self, source_nodes, target_nodes) -> bool:
+        """
+        A function that returns whether the Graph is amenable with respect to source_nodes and target_nodes.
+
+        The graph is amenable with respect to source_nodes and target_nodes if every first edge on every
+        proper possibly directed path from a source to a target node is visible.
+
+        Parameters
+        ----------
+        source_nodes : list of nodes (tupels containing a varable index in [0,self.N) and a time lag in [-self.tau_max, 0]
+        target_nodes : list of nodes (tupels containing a varable index in [0,self.N) and a time lag in [-self.tau_max, 0]
+        """
+        if self.graph_type in ['dag', 'tsg_dag', 'stationary_dag']:
+            return True
+        all_nodes = [(i, -tau) for i in range(self.N) for tau in range(self.tau_max + 1)]
+        paths = self._get_causal_paths(source_nodes, target_nodes, mediators=all_nodes)
+        first_edges = set()
+        for source in source_nodes:
+            for target in target_nodes:
+                for path in paths[source][target]:
+                    first_edges.add((path[0], path[1]))
+        for edge in first_edges:
+            if not self._edge_is_visible(edge):
+                return False
+        return True
+
+
     @staticmethod
     def get_dict_from_graph(graph, parents_only=False):
         """Helper function to convert graph to dictionary of links.
@@ -1357,4 +1514,7 @@ if __name__ == '__main__':
     # # Initialize class as `stationary_dag`
     causal_effects = Graphs(graph, graph_type='dag', tau_max=0,
                                 verbosity=1)
+
+
+
 
