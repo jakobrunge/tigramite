@@ -1505,53 +1505,15 @@ if __name__ == '__main__':
     import tigramite.plotting as tp
     from matplotlib import pyplot as plt
     import sys
-    from plotting import *
 
     # # Use staticmethod to get graph
-    graph1 = np.array([['', '-->', '-->', '', ''],['<--', '', '<->', '-->', ''],['<--', '<->', '', '-->', '-->'],
-                      ['', '<--', '<--', '', '-->'], ['', '', '<--', '<--', '']], dtype='<U3')
+    graph = np.array([['', '-->'],
+                      ['<--', '']], dtype='<U3')
+    
 
-    # 4 nodes, tau_max = 1 → shape (3,3,2,2)
-    graph = np.zeros((3, 3, 2, 2), dtype='<U3')
-    graph[:] = ""
-
-    # X0(t-1) → X0(t)
-    graph[0, 0, 1, 0] = "<->"
-    graph[0, 0, 0, 1] = "<->"
-
-    # X2(t-1) → X2(t)
-    graph[2, 2, 1, 0] = "-->"
-    graph[2, 2, 0, 1] = "<--"
-
-    # X1(t-1) → X1(t)
-    graph[1, 1, 0, 1] = "-->"
-    graph[1, 1, 1, 0] = "<--"
-
-    # X0(t) → X1(t-1)
-    graph[0, 1, 0, 1] = "-->"
-    graph[1, 0, 1, 0] = "<--"
-
-    # X1(t) → X2(t-1)
-    graph[1, 2, 0, 1] = "-->"
-    graph[2, 1, 1, 0] = "<--"
-
-    # X0(t) ↔ X1(t)
-    graph[0, 1, 0, 0] = "<->"
-    graph[1, 0, 0, 0] = "<->"
-
-    # X2(t) ↔ X1(t)
-    graph[2, 1, 0, 0] = "<->"
-    graph[1, 2, 0, 0] = "<->"
-
-    # X0(t-1) ↔ X1(t-1)
-    graph[0, 1, 1, 1] = "-->"
-    graph[1, 0, 1, 1] = "<--"
-
-
-
-    causal_effects = Graphs(graph1, graph_type='mag', tau_max=1, verbosity=1)
-    print(causal_effects.is_amenable([(0,0)],[(1,0)]))
-    #plot_time_series_graph(causal_effects.graph, save_name='small_example.png')
+    # # Initialize class as `stationary_dag`
+    causal_effects = Graphs(graph, graph_type='dag', tau_max=0,
+                                verbosity=1)
 
 
 
