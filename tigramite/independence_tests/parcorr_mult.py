@@ -314,11 +314,11 @@ class ParCorrMult(CondIndTest):
                                            verbosity=self.verbosity)
 
         # pval = (null_dist >= np.abs(value)).mean()
-        pval = float(np.sum(null_dist >= value) + 1) / (self.sig_samples + 1)
+        pval = float(np.sum(np.abs(null_dist) >= np.abs(value)) + 1) / (self.sig_samples + 1)
 
-        # Adjust p-value for two-sided measures
-        if pval < 1.:
-            pval *= 2.
+        # # Adjust p-value for two-sided measures
+        # if pval < 1.:
+        #     pval *= 2.
 
         # Adjust p-value for dimensions of x and y (conservative Bonferroni-correction)
         # pval *= dim_x*dim_y
