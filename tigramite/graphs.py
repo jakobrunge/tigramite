@@ -337,9 +337,9 @@ class Graphs():
         graph_dict must be represented as a dictionary mapping vertices to
         iterables of neighbouring vertices. For example:
 
-        >>> cyclic({1: (2,), 2: (3,), 3: (1,)})
+        >> cyclic({1: (2,), 2: (3,), 3: (1,)})
         True
-        >>> cyclic({1: (2,), 2: (3,), 3: (4,)})
+        >> cyclic({1: (2,), 2: (3,), 3: (4,)})
         False
         """
 
@@ -733,25 +733,25 @@ class Graphs():
 
         return descendants
 
-    def _get_collider_path_nodes(self, W, descendants, with_parents = True):
+    def _get_collider_path_nodes(self, start_nodes, mediators, with_parents = True):
         """Returns the set of all nodes from collider path i.e. paths consisting of bidirected edges only
-        from W that do not contain nodes in descendants and their parents up to maximum time lag.
+        a node in start_nodes that only contains nodes in mediators and their parents up to maximum time lag.
 
         The function recognizes only collider paths of at least length 1.
 
         Parameters
         ----------
-        W : set or list of nodes
+        start_nodes : set or list of nodes
             The set of nodes that a collider path may start in.
-        descendants : set or list of nodes
-            The nodes that are forbidden from being mediators of the collider path.
+        mediators : set or list of nodes
+            All nodes on the Path that are not start_nodes have to be contained in this set.
         with_parents : bool
             If set to false it will only return the collider path nodes, without its parents.
         """
 
         collider_path_nodes = set([])
-        # print("descendants ", descendants)
-        for w in W:
+        # print("mediators ", mediators)
+        for w in start_nodes:
             # print(w)
             this_level = [w]
             while len(this_level) > 0:
@@ -762,7 +762,7 @@ class Graphs():
                         # print("\t\t", spouse)
                         _, tau = spouse
                         if (spouse not in collider_path_nodes
-                            and spouse not in descendants 
+                            and spouse in mediators
                             and (-self.tau_max <= tau <= 0)): # or self.ignore_time_bounds)):
                             collider_path_nodes.add(spouse)
                             next_level.append(spouse)
@@ -774,7 +774,7 @@ class Graphs():
             for par in self._get_all_parents(collider_path_nodes):
                 _, tau = par
                 if (par not in collider_path_nodes
-                    and par not in descendants
+                    and par in mediators
                     and (-self.tau_max <= tau <= 0)): # or self.ignore_time_bounds)):
                     collider_path_nodes = collider_path_nodes.union(set([par]))
 
@@ -1350,8 +1350,7 @@ class Graphs():
             return True
         #get all nodes on collider paths in the parents of Y and going into X
         y_parents = set(self._get_parents(edge[1]))
-        non_mediators = set([(i, -tau) for i in range(self.N) for tau in range(self.tau_max + 1)]) - y_parents
-        collider_path_nodes = self._get_collider_path_nodes([edge[0]], non_mediators, with_parents=False)
+        collider_path_nodes = self._get_collider_path_nodes([edge[0]], y_parents, with_parents=False)
         if collider_path_nodes == set():
             #make sure that the lag of y is given as a negative number
             collider_path_nodes.add((x,- abs(xlag)))
@@ -1509,8 +1508,8 @@ if __name__ == '__main__':
     from plotting import *
 
     # # Use staticmethod to get graph
-    #graph1 = np.array([['', '-->', '-->', '', ''],['<--', '', '<->', '-->', ''],['<--', '<->', '', '-->', '-->'],
-    #                  ['', '<--', '<--', '', '-->'], ['', '', '<--', '<--', '']], dtype='<U3')
+    graph1 = np.array([['', '-->', '-->', '', ''],['<--', '', '<->', '-->', ''],['<--', '<->', '', '-->', '-->'],
+                      ['', '<--', '<--', '', '-->'], ['', '', '<--', '<--', '']], dtype='<U3')
 
     # 4 nodes, tau_max = 1 → shape (3,3,2,2)
     graph = np.zeros((3, 3, 2, 2), dtype='<U3')
@@ -1550,119 +1549,10 @@ if __name__ == '__main__':
 
 
 
-    causal_effects = Graphs(graph, graph_type='mag', tau_max=1, verbosity=1)
-    print(causal_effects.is_amenable([(0,1)],[(1,-1)]))
+    causal_effects = Graphs(graph1, graph_type='mag', tau_max=1, verbosity=1)
+    print(causal_effects.is_amenable([(0,0)],[(1,0)]))
     #plot_time_series_graph(causal_effects.graph, save_name='small_example.png')
 
-    import ciflypy as cf
 
-
-    def generate_random_mg(N, tau_max, edge_prob=0.5, bidirected_fraction=0.33, seed=42):
-        """
-        Generate a random mixed graph with N nodes. It is acyclic but may contain almost-cycles.
-        It returns the graph once in the form used in tigramite and once in the form used in cifly.
-
-        Steps:
-        1. Start with an empty directed graph.
-        2. Add directed edges i -> j for i > j with probability edge_prob.
-        3. Convert around 1/3 of directed edges to bidirected edges.
-        4. Use a seed for full reproducibility.
-        """
-        rng = np.random.default_rng(seed)
-
-        # MG uses shape (N, N, tau_max + 1, tau_max + 1) in Tigramite
-        graph = np.zeros((N, N, tau_max + 1, tau_max + 1), dtype="<U3")
-        graph[:] = ""
-        test_graph = {'-->':[], '<->':[]}
-
-        # Step 1–2: Create a DAG (edges only from lower index to higher)
-        for i in range(N):
-            for j in range(N):
-                for lagi in range(tau_max + 1):
-                    for lagj in range(lagi + 1):
-                        if (i+lagi*N>j+lagj*N) and rng.random() < edge_prob:
-                            # Step 3: Convert 1/3 of directed edges into bidirected edges
-                            if rng.random() < bidirected_fraction:
-                                graph[i, j, lagi, lagj] = "<->"
-                                graph[j, i, lagj, lagi] = "<->"
-                                test_graph['<->'].append((i+lagi*N, j+lagj*N))
-                            else:
-                                graph[i, j, lagi, lagj] = "-->"
-                                graph[j, i, lagj, lagi] = "<--"
-                                test_graph['-->'].append((i+lagi*N, j+lagj*N))
-        return graph, test_graph
-
-
-    def is_visible(g, X, Y):
-        sets = {"X": X, "Y": Y}
-        is_visible_table = """
-                    EDGES --> <--, <->
-                    SETS X, Y
-                    COLORS mediator, collider, deadend, Y
-                    START  ... [Y] AT Y
-                    OUTPUT ... [collider]
-                    
-                    ... [Y]        | -->    [mediator] | next in X
-                    ... [mediator] | <->    [collider] | next not in Y and next not in X
-                    ... [mediator] | <--    [collider] | next not in Y and next not in X
-                    ... [Y]        | -->    [mediator] | next not in X
-                    ... [Y]        | <--,<-> [deadend] | next not in X
-                    """
-        reached = cf.reach(g, sets, is_visible_table, table_as_string=True)
-        return not len(reached) == 0
-
-
-    def is_amenable(g, X, Y):
-        invisibles = set()
-        for (x, y) in g["-->"]:
-            if (x in X) and not (y in X):
-                if not is_visible(g, [x], [y]):
-                    invisibles.add(y)
-        sets = {"X": X, "Invisibles": invisibles}
-        is_not_amenable_table = """
-                    EDGES --> <--, <->
-                    SETS X, Y, Invisibles
-                    COLORS yield
-                    START ... [yield] AT Invisibles
-                    OUTPUT ... [yield]
-
-                    ... [yield]  | -->  [yield] | next not in X and next not in Invisibles
-                    """
-        reached = cf.reach(g, sets, is_not_amenable_table, table_as_string=True)
-        if set(reached).intersection(Y) == set():
-            return True
-        return False
-
-
-
-    N = 5 #number of nodes
-    tau_max = 4
-    realisations = 100
-    seed = 155
-    node_set_size = 2
-    edge_probability = 0.5
-    bidirected_fraction = 0.33
-
-    for i in range(realisations):
-        #generating graphs
-        graph , test_graph = generate_random_mg(N, tau_max,edge_prob=edge_probability,
-                                                bidirected_fraction=bidirected_fraction, seed=seed+i)
-        causal_graph = Graphs(graph, graph_type='tsg_mag', tau_max=tau_max, verbosity=0)
-        rng = np.random.default_rng(seed+i+1)
-
-        #choosing source-nodes
-        X = rng.choice(N*(tau_max+1)-node_set_size, size=node_set_size, replace=False)
-        source_nodes = [(n % N, -1*(n // N)) for n in X]
-
-        #choosing target-nodesin causal order after the source nodes, such that paths can exist
-        Y = rng.choice(np.arange(max(X), N*(tau_max+1)), size=node_set_size, replace=False)
-        target_nodes = [(n%N, -1*(n//N)) for n in Y]
-        #testing
-        if not is_amenable(test_graph, X, Y) == causal_graph.is_amenable(source_nodes, target_nodes):
-            plot_time_series_graph(causal_graph.graph)
-            print(graph)
-            print(source_nodes, target_nodes)
-            break
-    print("Test successful!")
 
 
