@@ -796,6 +796,7 @@ def cmi_knn(request):
                   conf_lev=0.9,
                   conf_samples=10000,
                   conf_blocklength=1,
+                  permute='X',
                   verbosity=0)
 
 @pytest.fixture(params=[
