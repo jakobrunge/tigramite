@@ -1,0 +1,12 @@
+---
+version: "3.7"
+
+services:
+  app:
+    image: ${DOCKER_REGISTRY_URL-tigramite}:${DOCKER_IMAGE_TAG-local}
+    build:
+      context: ./../
+      dockerfile: docker/Dockerfile
+      labels:
+        DOCKER_IMAGE_TAG: ${DOCKER_IMAGE_TAG-local}
+        DOCKER_REGISTRY_URL: ${DOCKER_REGISTRY_URL-tigramite}

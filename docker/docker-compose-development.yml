@@ -1,0 +1,13 @@
+---
+version: "3.9"
+
+services:
+  app:
+    image: tigramite:local
+    hostname: tigramite_dev
+    container_name: tigramite_dev
+    volumes:
+      - ./..:/opt/tigramite
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+

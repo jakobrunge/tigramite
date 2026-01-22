@@ -1,0 +1,19 @@
+# This is a list of Debian packages, we are depending on.
+# Be careful when editing the list, obey the given syntax.
+
+sudo
+python3
+python3-numpy
+python3-scipy
+python3-numba
+python3-matplotlib
+python3-seaborn
+python3-networkx
+python3-torch
+python3-joblib
+
+# Optional packages for development.
+
+vim
+make
+
