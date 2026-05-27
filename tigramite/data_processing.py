@@ -1018,7 +1018,7 @@ def get_acf(series, max_lag=None):
         y1_vals = series[lag:]
         y2_vals = series[:len(series) - lag]
         # Calculate the autocorrelation
-        autocorr[lag] = np.corrcoef(y1_vals, y2_vals, ddof=0)[0, 1]
+        autocorr[lag] = np.corrcoef(y1_vals, y2_vals)[0, 1]
     return autocorr
 
 def get_block_length(array, xyz, mode):
