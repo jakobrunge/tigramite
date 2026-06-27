@@ -862,6 +862,74 @@ def test_cmi_knn(cmi_knn, data_sample_c):
                                atol=0.02)
 
 
+def _restricted_permutation_reference(T, shuffle_neighbors, neighbors, order):
+    """Reference implementation of the legacy restricted permutation logic."""
+    restricted_permutation = np.zeros(T, dtype=np.int32)
+    used = np.array([], dtype=np.int32)
+    for sample_index in order:
+        m = 0
+        use = neighbors[sample_index, m]
+        while ((use in used) and (m < shuffle_neighbors - 1)):
+            m += 1
+            use = neighbors[sample_index, m]
+        restricted_permutation[sample_index] = use
+        used = np.append(used, use)
+    return restricted_permutation
+
+
+def test_cmiknn_restricted_permutation_equivalence():
+    rng = np.random.default_rng(0)
+    T = 50
+    shuffle_neighbors = 5
+    neighbors = rng.integers(0, T, size=(T, shuffle_neighbors))
+    order = rng.permutation(T).astype(np.int32)
+    cmi = CMIknn(seed=1, sig_samples=10, verbosity=0)
+    result = cmi.get_restricted_permutation(T, shuffle_neighbors, neighbors, order)
+    expected = _restricted_permutation_reference(
+        T, shuffle_neighbors, neighbors, order)
+    np.testing.assert_array_equal(result, expected)
+
+
+def test_cmiknn_shuffle_parallel_determinism():
+    seed = 123
+    T = 120
+    dim = 4
+    array = np.random.default_rng(seed).standard_normal((dim, T))
+    xyz = np.array([0, 1, 2, 2])
+    common_kwargs = dict(
+        seed=seed, knn=0.2, sig_samples=30, shuffle_neighbors=5,
+        workers=1, verbosity=0,
+    )
+    val = CMIknn(**common_kwargs).get_dependence_measure(array, xyz)
+    serial = CMIknn(n_jobs=1, **common_kwargs)
+    parallel = CMIknn(n_jobs=2, **common_kwargs)
+    _, null_serial = serial.get_shuffle_significance(
+        array, xyz, val, return_null_dist=True)
+    _, null_parallel = parallel.get_shuffle_significance(
+        array, xyz, val, return_null_dist=True)
+    np.testing.assert_array_equal(null_serial, null_parallel)
+
+
+def test_cmiknn_shuffle_seed_reproducibility():
+    seed = 456
+    T = 100
+    dim = 3
+    array = np.random.default_rng(seed).standard_normal((dim, T))
+    xyz = np.array([0, 1, 2])
+    common_kwargs = dict(
+        seed=seed, knn=10, sig_samples=25, shuffle_neighbors=5,
+        n_jobs=2, workers=1, verbosity=0,
+    )
+    val = CMIknn(**common_kwargs).get_dependence_measure(array, xyz)
+    first = CMIknn(**common_kwargs)
+    second = CMIknn(**common_kwargs)
+    _, null_first = first.get_shuffle_significance(
+        array, xyz, val, return_null_dist=True)
+    _, null_second = second.get_shuffle_significance(
+        array, xyz, val, return_null_dist=True)
+    np.testing.assert_array_equal(null_first, null_second)
+
+
 # CMIknnMixed TESTING ##############################################################
 
 # Here we only test the main functionality of CMIknnMixed, as the rest of the 

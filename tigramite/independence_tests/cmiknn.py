@@ -7,8 +7,8 @@
 from __future__ import print_function
 from scipy import special, spatial, stats
 import numpy as np
-from numba import jit
 import warnings
+from joblib import Parallel, delayed
 
 from tigramite.independence_tests.independence_tests_base import CondIndTest
 
@@ -79,8 +79,14 @@ class CMIknn(CondIndTest):
         or transforming to uniform marginals.
 
     workers : int (optional, default = -1)
-        Number of workers to use for parallel processing. If -1 is given
-        all processors are used. Default: -1.
+        Number of workers to use for scipy cKDTree query parallelization. If -1
+        is given all processors are used. Default: -1.
+
+    n_jobs : int (optional, default = -1)
+        Number of parallel workers for the shuffle surrogate loop. If -1 is
+        given all processors are used. Set to 1 to disable surrogate
+        parallelization. When ``n_jobs != 1``, scipy tree queries use a single
+        worker per surrogate to avoid oversubscription.
 
     null_fit : {None, 'normal', 'gamma'}, optional (default: None)
         If None, the empirical surrogate distribution is used to compute
@@ -124,6 +130,7 @@ class CMIknn(CondIndTest):
                  significance='shuffle_test',
                  transform='ranks',
                  workers=-1,
+                 n_jobs=-1,
                  model_selection_folds=3,
                  null_fit=None,
                  permute='Y',
@@ -137,6 +144,7 @@ class CMIknn(CondIndTest):
         self.residual_based = False
         self.recycle_residuals = False
         self.workers = workers
+        self.n_jobs = n_jobs
         self.null_fit = null_fit
         self.permute = permute
         self.model_selection_folds = model_selection_folds
@@ -152,9 +160,16 @@ class CMIknn(CondIndTest):
             print(f"Restricted shuffle permutes: {self.permute}")
             if self.null_fit is not None:
                 print("Using parametric null fit:", self.null_fit)
-            
-    @jit(forceobj=True)
-    def _get_nearest_neighbors(self, array, xyz, knn):
+
+    def _effective_surrogate_n_jobs(self, T):
+        """Return effective job count for shuffle surrogates (serial for tiny work)."""
+        if self.n_jobs == 1:
+            return 1
+        if self.sig_samples < 10 or T < 50:
+            return 1
+        return self.n_jobs
+
+    def _get_nearest_neighbors(self, array, xyz, knn, rng=None, tree_workers=None):
         """Returns nearest neighbors according to Frenzel and Pompe (2007).
 
         Retrieves the distances eps to the k-th nearest neighbors for every
@@ -186,9 +201,14 @@ class CMIknn(CondIndTest):
 
         dim, T = array.shape
 
+        if rng is None:
+            rng = self.random_state
+        if tree_workers is None:
+            tree_workers = self.workers
+
         # Add noise to destroy ties...
         array += (1E-6 * array.std(axis=1).reshape(dim, 1)
-                  * self.random_state.random((array.shape[0], array.shape[1])))
+                  * rng.random((array.shape[0], array.shape[1])))
 
         if self.transform == 'standardize':
             # Standardize
@@ -215,7 +235,7 @@ class CMIknn(CondIndTest):
         # Compute distance to k-th nearest neighbor, excluding points itself, hence k=[knn+1]
         tree_xyz = spatial.cKDTree(array)
         epsarray = tree_xyz.query(array, k=[knn+1], p=np.inf,
-                                  workers=self.workers)[0][:, 0].astype(np.float64)
+                                  workers=tree_workers)[0][:, 0].astype(np.float64)
         # print("epsarray", epsarray)
 
         # To search neighbors < eps instead of <= eps, we need to reduce eps by a bit
@@ -230,16 +250,16 @@ class CMIknn(CondIndTest):
         # Find nearest neighbors in subspaces
         xz = array[:, np.concatenate((x_indices, z_indices))]
         tree_xz = spatial.cKDTree(xz)
-        k_xz = tree_xz.query_ball_point(xz, r=epsarray, p=np.inf, workers=self.workers, return_length=True)
+        k_xz = tree_xz.query_ball_point(xz, r=epsarray, p=np.inf, workers=tree_workers, return_length=True)
 
         yz = array[:, np.concatenate((y_indices, z_indices))]
         tree_yz = spatial.cKDTree(yz)
-        k_yz = tree_yz.query_ball_point(yz, r=epsarray, p=np.inf, workers=self.workers, return_length=True)
+        k_yz = tree_yz.query_ball_point(yz, r=epsarray, p=np.inf, workers=tree_workers, return_length=True)
 
         if len(z_indices) > 0:
             z = array[:, z_indices]
             tree_z = spatial.cKDTree(z)
-            k_z = tree_z.query_ball_point(z, r=epsarray, p=np.inf, workers=self.workers, return_length=True)
+            k_z = tree_z.query_ball_point(z, r=epsarray, p=np.inf, workers=tree_workers, return_length=True)
         else:
             # Number of neighbors is T when z is empty.
             k_z = np.full(T, T, dtype=np.float64)
@@ -251,7 +271,8 @@ class CMIknn(CondIndTest):
         # print("k_z", k_z)
         return k_xz, k_yz, k_z
 
-    def get_dependence_measure(self, array, xyz, data_type=None):
+    def get_dependence_measure(self, array, xyz, data_type=None, rng=None,
+                               tree_workers=None):
         """Returns CMI estimate as described in Frenzel and Pompe PRL (2007).
 
         Parameters
@@ -278,7 +299,9 @@ class CMIknn(CondIndTest):
 
         k_xz, k_yz, k_z = self._get_nearest_neighbors(array=array,
                                                       xyz=xyz,
-                                                      knn=knn_here)
+                                                      knn=knn_here,
+                                                      rng=rng,
+                                                      tree_workers=tree_workers)
 
         val = special.digamma(knn_here) - (special.digamma(k_xz) +
                                            special.digamma(k_yz) -
@@ -368,39 +391,37 @@ class CMIknn(CondIndTest):
                                        p=np.inf,
                                        eps=0.)[1].astype(np.int32)
 
-            null_dist = np.zeros(self.sig_samples)
-            for sam in range(self.sig_samples):
+            effective_n_jobs = self._effective_surrogate_n_jobs(T)
+            tree_workers = 1 if effective_n_jobs != 1 else self.workers
+            seeds = self.random_state.integers(
+                0, np.iinfo(np.int32).max, size=self.sig_samples)
 
-                # Generate random order in which to go through indices loop in
-                # next step
-                order = self.random_state.permutation(T).astype(np.int32)
-
-                # Shuffle neighbor indices for each sample index
-                for i in range(len(neighbors)):
-                    self.random_state.shuffle(neighbors[i])
-                # neighbors = self.random_state.permuted(neighbors, axis=1)
-                
-                # Select a series of neighbor indices that contains as few as
-                # possible duplicates
-                restricted_permutation = self.get_restricted_permutation(
-                        T=T,
-                        shuffle_neighbors=self.shuffle_neighbors,
+            if effective_n_jobs == 1:
+                null_dist = np.zeros(self.sig_samples)
+                for sam, seed in enumerate(seeds):
+                    null_dist[sam] = self._compute_shuffle_surrogate(
+                        seed=seed,
+                        array=array,
+                        xyz=xyz,
                         neighbors=neighbors,
-                        order=order)
-
-                array_shuffled = np.copy(array)
-                if self.permute == 'X':
-                    for i in x_indices:
-                        array_shuffled[i] = array[i, restricted_permutation]
-                else:  # permute Y
-                    for i in y_indices:
-                        array_shuffled[i] = array[i, restricted_permutation]
-                # array_shuffled = np.copy(array)
-                # for i in x_indices:
-                #     array_shuffled[i] = array[i, restricted_permutation]
-
-                null_dist[sam] = self.get_dependence_measure(array_shuffled,
-                                                             xyz)
+                        x_indices=x_indices,
+                        y_indices=y_indices,
+                        T=T,
+                        tree_workers=tree_workers,
+                    )
+            else:
+                null_dist = np.array(Parallel(n_jobs=effective_n_jobs)(
+                    delayed(self._compute_shuffle_surrogate)(
+                        seed=seed,
+                        array=array,
+                        xyz=xyz,
+                        neighbors=neighbors,
+                        x_indices=x_indices,
+                        y_indices=y_indices,
+                        T=T,
+                        tree_workers=tree_workers,
+                    ) for seed in seeds
+                ))
 
         else:
             null_dist = \
@@ -519,23 +540,48 @@ class CMIknn(CondIndTest):
 
         return h_x_y
 
+    def _compute_shuffle_surrogate(self, seed, array, xyz, neighbors,
+                                   x_indices, y_indices, T, tree_workers=1):
+        """Compute one shuffle surrogate CMI value with deterministic RNG."""
+        rng = np.random.default_rng(seed)
+        neighbors_here = neighbors.copy()
 
-    @jit(forceobj=True)
+        order = rng.permutation(T).astype(np.int32)
+        for i in range(len(neighbors_here)):
+            rng.shuffle(neighbors_here[i])
+
+        restricted_permutation = self.get_restricted_permutation(
+            T=T,
+            shuffle_neighbors=self.shuffle_neighbors,
+            neighbors=neighbors_here,
+            order=order)
+
+        array_shuffled = np.copy(array)
+        if self.permute == 'X':
+            for i in x_indices:
+                array_shuffled[i] = array[i, restricted_permutation]
+        else:
+            for i in y_indices:
+                array_shuffled[i] = array[i, restricted_permutation]
+
+        return self.get_dependence_measure(
+            array_shuffled, xyz, rng=rng, tree_workers=tree_workers)
+
     def get_restricted_permutation(self, T, shuffle_neighbors, neighbors, order):
 
         restricted_permutation = np.zeros(T, dtype=np.int32)
-        used = np.array([], dtype=np.int32)
+        used_mask = np.zeros(T, dtype=bool)
 
         for sample_index in order:
             m = 0
             use = neighbors[sample_index, m]
 
-            while ((use in used) and (m < shuffle_neighbors - 1)):
+            while (used_mask[use] and (m < shuffle_neighbors - 1)):
                 m += 1
                 use = neighbors[sample_index, m]
 
             restricted_permutation[sample_index] = use
-            used = np.append(used, use)
+            used_mask[use] = True
 
         return restricted_permutation
 
