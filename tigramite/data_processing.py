@@ -291,9 +291,9 @@ class DataFrame():
 
         # Setup dictionary of variables for vector mode
         self.vector_vars = vector_vars
-        if self.vector_vars is None:
-            self.vector_vars = dict(zip(range(self.Ndata), [[(i, 0)] 
-                                for i in range(self.Ndata)]))
+        if self.vector_vars is None:            
+            self.vector_vars = {i:[(i, 0)] for i in range(self.Ndata)}
+            
             self.has_vector_data = False
         else:
             self.has_vector_data = True
@@ -310,7 +310,7 @@ class DataFrame():
 
         if self.analysis_mode == 'multiple' and self.M == 1:
             warnings.warn("In analysis mode 'multiple'. There is just a "\
-                "single dataset, is this as intended?'")
+                "single dataset, is this as intended?")
 
 
         # Save the variable names. If unspecified, use the default
@@ -342,8 +342,9 @@ class DataFrame():
                 self.datatime = datatime
 
         # Save the largest/smallest relevant time step
-        self.largest_time_step = np.add(np.asarray(list(self.T.values())), np.asarray(list(self.time_offsets.values()))).max()
-        self.smallest_time_step = np.add(np.asarray(list(self.T.values())), np.asarray(list(self.time_offsets.values()))).min()
+        _T_plus_offset = np.asarray(list(self.T.values())) + np.asarray(list(self.time_offsets.values()))
+        self.largest_time_step = _T_plus_offset.max()
+        self.smallest_time_step = _T_plus_offset.min()
 
         # Check and prepare the reference points
         self._check_and_set_reference_points(reference_points)
