@@ -424,12 +424,23 @@ class GaussProcRegTorch():
             mean = mean.detach().numpy()
 
         if return_means and not return_likelihood:
-            return resid, mean
+            result = (resid, mean)
         elif return_likelihood and not return_means:
-            return resid, loglik
+            result = (resid, loglik)
         elif return_means and return_likelihood:
-            return resid, mean, loglik
-        return resid
+            result = (resid, mean, loglik)
+        else:
+            result = resid
+
+        if device_type == 'cuda':
+            # Model, likelihood, and optimizer closures form reference cycles.
+            # PCMCI repeatedly fits GPs in one process, so waiting for Python's
+            # cyclic GC can retain hundreds of MiB per CI test until CUDA OOM.
+            del model, likelihood, mll, train_x, train_y
+            gc.collect()
+            torch.cuda.empty_cache()
+
+        return result
 
     def _get_model_selection_criterion(self, j, parents, tau_max=0):
         """Returns log marginal likelihood for GP regression.

@@ -778,6 +778,22 @@ def test_gpdc_torch_cuda_prediction_memory(gpdc_torch):
     assert peak_increase < 1024**3
 
 
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA is required")
+def test_gpdc_torch_repeated_fits_release_cuda_memory(gpdc_torch):
+    """Repeated PCMCI-style GP fits release cyclic CUDA model state."""
+    array = np.random.default_rng(0).standard_normal((3, 2000))
+
+    torch.cuda.empty_cache()
+    memory_before = torch.cuda.memory_allocated()
+    for _ in range(3):
+        residuals = gpdc_torch._get_single_residuals(
+            array, target_var=0, training_iter=1)
+        assert np.all(np.isfinite(residuals))
+
+    retained_increase = torch.cuda.memory_allocated() - memory_before
+    assert retained_increase < 64 * 1024**2
+
+
 def test_gpdc_torch_polyinterp_supports_numpy_2():
     """The GPDCtorch optimizer must not use NumPy's removed ``np.Inf`` alias."""
     points = np.array(
