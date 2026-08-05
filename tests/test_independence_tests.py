@@ -4,9 +4,11 @@ Tests for independence_tests.py.
 from __future__ import print_function
 import numpy as np
 import pytest
+import torch
 from scipy import stats
 
 from tigramite.independence_tests.parcorr import ParCorr
+from tigramite.independence_tests.LBFGS import polyinterp
 from tigramite.independence_tests.robust_parcorr import RobustParCorr
 from tigramite.independence_tests.parcorr_wls import ParCorrWLS
 from tigramite.independence_tests.gpdc import GPDC
@@ -758,6 +760,47 @@ def test_gpdc_torch_residuals(gpdc_torch, seed):
     np.testing.assert_allclose(pred[cntr],
                                func(target_res[cntr], c_val),
                                atol=0.2, rtol=1e-01)
+
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA is required")
+def test_gpdc_torch_cuda_prediction_memory(gpdc_torch):
+    """GPU prediction does not expand kernel checkpoint batches."""
+    array = np.random.default_rng(0).standard_normal((3, 2000))
+
+    torch.cuda.empty_cache()
+    memory_before = torch.cuda.memory_allocated()
+    torch.cuda.reset_peak_memory_stats()
+
+    residuals = gpdc_torch._get_single_residuals(
+        array, target_var=0, training_iter=1)
+
+    peak_increase = torch.cuda.max_memory_allocated() - memory_before
+    assert np.all(np.isfinite(residuals))
+    assert peak_increase < 1024**3
+
+
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA is required")
+def test_gpdc_torch_repeated_fits_release_cuda_memory(gpdc_torch):
+    """Repeated PCMCI-style GP fits release cyclic CUDA model state."""
+    array = np.random.default_rng(0).standard_normal((3, 2000))
+
+    torch.cuda.empty_cache()
+    memory_before = torch.cuda.memory_allocated()
+    for _ in range(3):
+        residuals = gpdc_torch._get_single_residuals(
+            array, target_var=0, training_iter=1)
+        assert np.all(np.isfinite(residuals))
+
+    retained_increase = torch.cuda.memory_allocated() - memory_before
+    assert retained_increase < 64 * 1024**2
+
+
+def test_gpdc_torch_polyinterp_supports_numpy_2():
+    """The GPDCtorch optimizer must not use NumPy's removed ``np.Inf`` alias."""
+    points = np.array(
+        [[0.0, 1.0, np.nan], [1.0, 0.0, np.nan], [2.0, 1.0, np.nan]]
+    )
+
+    assert polyinterp(points) == pytest.approx(1.0)
 
 def test_shuffle_sig_gpdc_torch(gpdc_torch, data_sample_b):
     # Get the data sample

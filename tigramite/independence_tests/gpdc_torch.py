@@ -357,9 +357,12 @@ class GaussProcRegTorch():
             likelihood.eval()
 
             # Make predictions by feeding model through likelihood
-            with torch.no_grad(), gpytorch.settings.fast_pred_var(), gpytorch.beta_features.checkpoint_kernel(1000):
+            # Prediction checkpointing can expand preconditioner batches to
+            # (T, checkpoint_size, T) with modern GPyTorch (see issue #308).
+            with torch.no_grad(), gpytorch.settings.fast_pred_var():
                 mean = model(train_x).loc.detach()
-                loglik = mll(model(train_x), train_y)*T
+                if return_likelihood:
+                    loglik = mll(model(train_x), train_y) * T
 
             resid = (train_y - mean).detach().cpu().numpy()
             mean = mean.detach().cpu().numpy()
@@ -414,18 +417,30 @@ class GaussProcRegTorch():
             # Make predictions by feeding model through likelihood
             with torch.no_grad(), gpytorch.settings.fast_pred_var():
                 mean = model(train_x).loc.detach()
-                loglik = mll(model(train_x), train_y) * T
+                if return_likelihood:
+                    loglik = mll(model(train_x), train_y) * T
 
             resid = (train_y - mean).detach().numpy()
             mean = mean.detach().numpy()
 
         if return_means and not return_likelihood:
-            return resid, mean
+            result = (resid, mean)
         elif return_likelihood and not return_means:
-            return resid, loglik
+            result = (resid, loglik)
         elif return_means and return_likelihood:
-            return resid, mean, loglik
-        return resid
+            result = (resid, mean, loglik)
+        else:
+            result = resid
+
+        if device_type == 'cuda':
+            # Model, likelihood, and optimizer closures form reference cycles.
+            # PCMCI repeatedly fits GPs in one process, so waiting for Python's
+            # cyclic GC can retain hundreds of MiB per CI test until CUDA OOM.
+            del model, likelihood, mll, train_x, train_y
+            gc.collect()
+            torch.cuda.empty_cache()
+
+        return result
 
     def _get_model_selection_criterion(self, j, parents, tau_max=0):
         """Returns log marginal likelihood for GP regression.
@@ -817,4 +832,3 @@ class GPDCtorch(CondIndTest):
             null_dist_here = self.gauss_pr.null_dists[int(df)]
             pval = np.mean(null_dist_here > np.abs(value))
         return pval
-
