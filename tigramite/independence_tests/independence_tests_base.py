@@ -396,6 +396,21 @@ class CondIndTest():
         if self.significance == 'fixed_thres' and alpha_or_thres is None:
             raise ValueError("significance == 'fixed_thres' requires setting alpha_or_thres")
 
+        # Within one causal discovery run (see pcmci_base.memoize_ci_tests),
+        # repeated identical calls are answered before the array is constructed
+        memo = getattr(self, '_run_test_memo', None)
+        if memo is not None:
+            memo_key = (tuple(X), tuple(Y), None if Z is None else tuple(Z),
+                        tau_max, cut_off, alpha_or_thres)
+            if memo_key in memo:
+                val, pval, dependent = memo[memo_key]
+                if self.verbosity > 1:
+                    self._print_cond_ind_results(val=val, pval=pval, cached=True,
+                                                 dependent=dependent, conf=None)
+                if alpha_or_thres is None:
+                    return val, pval
+                return val, pval, dependent
+
         # Get the array to test on
         (array, xyz, XYZ, data_type, 
          nonzero_array, nonzero_xyz, nonzero_XYZ, nonzero_data_type) = self._get_array(
@@ -452,6 +467,8 @@ class CondIndTest():
                 
         # Saved here, but not currently used
         self.ci_results[(tuple(X), tuple(Y),tuple(Z))] = (val, pval, dependent)
+        if memo is not None:
+            memo[memo_key] = (val, pval, dependent)
 
         # Return the calculated value(s)
         if self.verbosity > 1:

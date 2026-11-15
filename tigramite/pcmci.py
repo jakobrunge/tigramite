@@ -12,7 +12,7 @@ from copy import deepcopy
 import numpy as np
 import scipy.stats
 
-from tigramite.pcmci_base import PCMCIbase
+from tigramite.pcmci_base import PCMCIbase, memoize_ci_tests
 
 def _create_nested_dictionary(depth=0, lowest_type=dict):
     """Create a series of nested dictionaries to a maximum depth.  The first
@@ -1946,6 +1946,7 @@ class PCMCI(PCMCIbase):
         self.results = results
         return results
 
+    @memoize_ci_tests
     def run_pcmciplus(self,
                       selected_links=None,
                       link_assumptions=None,

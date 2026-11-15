@@ -6,6 +6,7 @@
 
 from __future__ import print_function
 import warnings
+import functools
 import itertools
 from collections import defaultdict
 from copy import deepcopy
@@ -13,6 +14,28 @@ import numpy as np
 import scipy.stats
 import math
 from joblib import Parallel, delayed
+
+def memoize_ci_tests(method):
+    """Decorator for causal discovery methods that repeat identical CI tests.
+
+    During one call of ``method``, ``cond_ind_test.run_test`` answers repeated
+    calls with identical arguments from a memo instead of constructing the
+    data array again (the existing ``cached_ci_results`` lookup needs that
+    array to hash it). The results are the same as without the memo. The memo
+    is discarded when ``method`` returns, so changes to the dataframe between
+    calls (e.g., RPCMCI updating the mask) are seen.
+    """
+    @functools.wraps(method)
+    def wrapper(self, *args, **kwargs):
+        test = self.cond_ind_test
+        if getattr(test, '_run_test_memo', None) is not None:
+            return method(self, *args, **kwargs)
+        test._run_test_memo = {}
+        try:
+            return method(self, *args, **kwargs)
+        finally:
+            test._run_test_memo = None
+    return wrapper
 
 class PCMCIbase():
     r"""PCMCI base class.
