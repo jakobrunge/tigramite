@@ -10,6 +10,7 @@ from numpy.testing import assert_equal
 import pytest
 
 from tigramite.pcmci import PCMCI
+from tigramite.lpcmci import LPCMCI
 from tigramite.independence_tests.parcorr import ParCorr
 from tigramite.independence_tests.oracle_conditional_independence import OracleCI
 import tigramite.data_processing as pp
@@ -782,3 +783,22 @@ def test_order_independence_pcmciplus(a_pcmciplus_order_independence,
         # np.allclose(results['graph'], back_converted_result)
         np.testing.assert_equal(results['graph'], back_converted_result)
 
+
+# MEMOIZED CI TESTS ############################################################
+@pytest.mark.parametrize("method", ["run_pcmciplus", "run_lpcmci"])
+def test_memoized_ci_tests(method):
+    """Repeated CI tests answered from the run_test memo give the same results."""
+    links = {0: [((0, -1), 0.5, lin_f)],
+             1: [((1, -1), 0.5, lin_f), ((0, 0), 0.6, lin_f)],
+             2: [((2, -1), 0.5, lin_f), ((1, 0), 0.5, lin_f), ((3, 0), 0.5, lin_f)],
+             3: [((3, -1), 0.5, lin_f)],
+             4: [((4, -1), 0.4, lin_f), ((2, -1), 0.4, lin_f), ((0, 0), 0.3, lin_f)]}
+    data, _ = toys.structural_causal_process(links=links, T=300, seed=1)
+    algorithm = PCMCI if method == "run_pcmciplus" else LPCMCI
+    results = []
+    for run in (getattr(algorithm, method), getattr(algorithm, method).__wrapped__):
+        discovery = algorithm(dataframe=pp.DataFrame(data), cond_ind_test=ParCorr())
+        results.append(run(discovery, tau_max=2, pc_alpha=0.05))
+        assert getattr(discovery.cond_ind_test, '_run_test_memo', None) is None
+    for key in ('graph', 'val_matrix', 'p_matrix'):
+        np.testing.assert_array_equal(results[0][key], results[1][key])

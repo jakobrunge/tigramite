@@ -2,7 +2,7 @@ import numpy as np
 from itertools import product, combinations
 from copy import deepcopy
 
-from .pcmci_base import PCMCIbase
+from .pcmci_base import PCMCIbase, memoize_ci_tests
 
 class LPCMCI(PCMCIbase):
     r""" LPCMCI is an algorithm for causal discovery in large-scale times series that allows for latent confounders and
@@ -181,6 +181,7 @@ class LPCMCI(PCMCIbase):
                         cond_ind_test=cond_ind_test,
                         verbosity=verbosity)
 
+    @memoize_ci_tests
     def run_lpcmci(self,
                     link_assumptions = None,
                     tau_min = 0,
